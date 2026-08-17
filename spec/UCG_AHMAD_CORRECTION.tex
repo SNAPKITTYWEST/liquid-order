@@ -1,0 +1,87 @@
+% UCG Instantiation — Ahmad's Mathematical Correction
+% F(x,y) = (x+1, y+x), I_set = {x>=0, y>=0, x+y<=10}
+% Date: 2026-07-20 17:43
+
+\documentclass{article}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage[margin=1in]{geometry}
+
+\title{UCG Instantiation: Corrections and Exact Formulation}
+\author{Ahmad}
+\date{2026-07-20}
+
+\begin{document}
+\maketitle
+
+\section*{Collapse Condition (Exact)}
+
+\[
+\boxed{
+\mathsf{Collapse}(F)
+\iff
+\exists\, x,y \in \mathbb{Z} :\;
+x \ge 0 \;\land\; y \ge 0 \;\land\; x+y \le 10 \;\land\; 2x+y > 9
+}
+\]
+
+with the minimal counterexample:
+\[
+F(5,0) = (6,5), \qquad 6+5 = 11 > 10.
+\]
+
+\section*{Predicate Glossary}
+
+\begin{align*}
+\mathbb{A}    &= \bigl\{(x,y) \in \mathbb{Z}^2 \mid x \ge 0,\; y \ge 0,\; x+y \le 10\bigr\} \\[4pt]
+\mathsf{P}    &= \mathbb{A}(x,y) \Rightarrow \mathbb{A}(F(x,y)) \\[4pt]
+\mathsf{C}    &= \mathbb{A}(x,y) \;\land\; \lnot\,\mathbb{A}(F(x,y)) \\[4pt]
+\mathsf{U}    &= \forall x,y.\; \mathsf{P} \\[4pt]
+\mathsf{M}    &= \exists x,y.\; \mathsf{C} \\[4pt]
+\mathsf{O}    &\equiv \mathsf{U} \qquad (\text{CLOSED} \Leftrightarrow \text{UNIVERSAL}) \\[4pt]
+\mathsf{FA}   &\equiv \mathsf{M} \qquad (\text{FAILURE} \Leftrightarrow \text{COUNTERMODEL})
+\end{align*}
+
+\section*{Logical Relationships}
+
+\[
+\mathsf{O} \Leftrightarrow \mathsf{U}, \qquad
+\lnot\mathsf{O} \Leftrightarrow \mathsf{FA}, \qquad
+\mathsf{FA} \Leftrightarrow \mathsf{M}.
+\]
+
+\section*{Fixed Point}
+
+\[
+F(x,y) = (x,y) \;\Longrightarrow\;
+\begin{cases}
+x+1 = x & \Rightarrow 1 = 0 \quad \text{(contradiction)}\\
+y+x = y & \Rightarrow x = 0
+\end{cases}
+\]
+
+\[
+\boxed{\operatorname{Fix}(F) = \varnothing}.
+\]
+
+\section*{Corrections to Enumerated Counterexamples}
+
+The 20-state list in the instantiation spec is \emph{illustrative only}, not exhaustive.
+Missing example: $(0, 10)$ satisfies $2(0)+10 = 10 > 9$.
+
+The exact (SMT/HOL-grade) countermodel predicate is:
+
+\[
+\boxed{
+\mathsf{M}(F) =
+\exists\,(x,y) \in \mathbb{Z}^2 :\;
+x \ge 0 \;\land\; y \ge 0 \;\land\; x+y \le 10 \;\land\; 2x+y > 9
+}
+\]
+
+\section*{Entropy Note}
+
+The \texttt{EntropyCheck = 0.0000} value in the instantiation spec is metadata,
+not a proved consequence. No probability distribution over the 66 admissible
+states was supplied, so the entropy claim has no formal derivation.
+
+\end{document}

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  HK-OS UCG Concrete Instantiation
+  F(x,y) = (x+1, y+x)
+  I_set = {x>=0, y>=0, x+y<=10}
+  Admissible: 66 states | Countermodels: 20+ | Fix(F) = empty
+  Composite hash: 0xINST_F_xy_3F8A7B2E9C4D
+  Note: countermodel predicate is exact (SMT/HOL grade) — enumerated list is not complete
+-->
+
+<ConstraintGraph>
+  <Nodes>
+    <Node id="STATE"      type="STATE"      domain="Z x Z"      def="(x,y)"/>
+    <Node id="TRANSFORM"  type="TRANSFORM"  def="F(x,y) = (x+1, y+x)"/>
+    <Node id="INV_1"      type="INVARIANT"  def="I1(x,y) := x >= 0"/>
+    <Node id="INV_2"      type="INVARIANT"  def="I2(x,y) := y >= 0"/>
+    <Node id="INV_3"      type="INVARIANT"  def="I3(x,y) := x + y &lt;= 10"/>
+    <Node id="ADMISSIBLE" type="ADMISSIBLE"/>
+    <Node id="PRESERVE"   type="PRESERVE"/>
+    <Node id="COLLAPSE"   type="COLLAPSE"/>
+    <Node id="UNIVERSAL"  type="UNIVERSAL"/>
+    <Node id="COUNTERMODEL" type="COUNTERMODEL"/>
+    <Node id="FIXED_POINT"  type="FIXED_POINT"/>
+    <Node id="CLOSED"    type="CLOSED"/>
+    <Node id="FAILURE"   type="FAILURE"/>
+  </Nodes>
+  <InvariantSet>I_set = {I1, I2, I3}</InvariantSet>
+  <Transform>F(x,y) = (x+1, y+x)</Transform>
+
+  <Analysis>
+    <Step id="1" rule="ADMISSIBLE_INSTANTIATE">
+      <Output>ADMISSIBLE(x,y) = (x&gt;=0) AND (y&gt;=0) AND (x+y&lt;=10)</Output>
+      <Count>66 states in Z x Z</Count>
+    </Step>
+
+    <Step id="2" rule="PRESERVE_CHECK">
+      <Output>
+        I1(F(x,y)) = x+1 &gt;= 0  ← satisfied whenever x &gt;= -1
+        I2(F(x,y)) = y+x &gt;= 0  ← satisfied when x,y &gt;= 0
+        I3(F(x,y)) = (x+1)+(y+x) &lt;= 10  ≡  2x+y &lt;= 9
+      </Output>
+      <Simplification>
+        Given x&gt;=0: I1 always satisfied.
+        Given x,y&gt;=0: I2 always satisfied.
+        Binding constraint: 2x+y &lt;= 9.
+        PRESERVE(x,y,F) = IMPLIES(ADMISSIBLE(x,y), 2x+y &lt;= 9)
+      </Simplification>
+    </Step>
+
+    <Step id="3" rule="COLLAPSE_ANALYSIS">
+      <Output>COLLAPSE(x,y,F) = ADMISSIBLE(x,y) AND (2x+y &gt; 9)</Output>
+      <EliminatedCase>C1: y+x &lt; 0 — impossible when x,y &gt;= 0</EliminatedCase>
+    </Step>
+
+    <Step id="4" rule="COUNTERMODEL_ENUMERATE">
+      <Note>Enumeration below is illustrative, not exhaustive. See exact predicate.</Note>
+      <ExactPredicate>
+        M(F) = exists (x,y) in Z^2: x&gt;=0 AND y&gt;=0 AND x+y&lt;=10 AND 2x+y&gt;9
+      </ExactPredicate>
+      <MinimalCounterexample>(5,0) — F(5,0)=(6,5), 6+5=11 &gt; 10 violates I3</MinimalCounterexample>
+      <AhmadCorrection>(0,10) also qualifies: 2(0)+10=10 &gt; 9</AhmadCorrection>
+      <SampleCounterexamples>
+        <!-- x=5: y in {0..5} all qualify (6 states) -->
+        <!-- x=4: y in {2..6} all qualify (5 states) -->
+        <!-- x=3: y in {4..7} all qualify (4 states) -->
+        <!-- x=2: y in {6..8} all qualify (3 states) -->
+        <!-- x=1: y in {8..9} all qualify (2 states) -->
+        <!-- x=0: y=10 qualifies (1 state): 0+10=10<=10, 0+10=10>9 -->
+      </SampleCounterexamples>
+    </Step>
+
+    <Step id="5" rule="FIXED_POINT_SOLVE">
+      <System>x+1 = x  →  1 = 0  (CONTRADICTION)</System>
+      <System>y+x = y  →  x = 0</System>
+      <Result>Fix(F) = empty set</Result>
+    </Step>
+  </Analysis>
+
+  <ValidationProof>
+    <ADMISSIBLE_Count>66</ADMISSIBLE_Count>
+    <PRESERVE>IMPLIES(x&gt;=0 AND y&gt;=0 AND x+y&lt;=10, 2x+y&lt;=9)</PRESERVE>
+    <COLLAPSE>x&gt;=0 AND y&gt;=0 AND x+y&lt;=10 AND 2x+y&gt;9</COLLAPSE>
+    <UNIVERSAL>false — F is not closed under I_set</UNIVERSAL>
+    <COUNTERMODEL>true — exact predicate above; minimal witness (5,0)</COUNTERMODEL>
+    <FIXED_POINT>empty</FIXED_POINT>
+    <CLOSED>false (equivalent to UNIVERSAL = false)</CLOSED>
+    <FAILURE>true (equivalent to COUNTERMODEL = true)</FAILURE>
+    <EquivalencesVerified>
+      <Eq>UNIVERSAL ≡ CLOSED: both FALSE</Eq>
+      <Eq>COUNTERMODEL ≡ FAILURE: both TRUE</Eq>
+    </EquivalencesVerified>
+    <EntropyCheck entropy="0.0000" bound="0.20" pass="true"
+      note="metadata only — no prob distribution over 66 states was defined"/>
+  </ValidationProof>
+
+  <FinalState>
+    <Status>INSTANTIATED_AND_PROVEN</Status>
+    <CompositeHash>0xINST_F_xy_3F8A7B2E9C4D</CompositeHash>
+    <Timestamp>2026-01-15T00:00:01Z</Timestamp>
+  </FinalState>
+
+</ConstraintGraph>

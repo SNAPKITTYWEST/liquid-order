@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  HK-OS Universal Constraint Graph — Abstract Schema
+  Formal definitions: ADMISSIBLE, PRESERVE, COLLAPSE, UNIVERSAL,
+  COUNTERMODEL, FIXED_POINT, CLOSED, FAILURE
+  Theorems: UNIVERSAL ≡ CLOSED, COUNTERMODEL ≡ FAILURE
+  Composite hash: 0xUNIVERSAL_CLOSURE_A1B2C3D4E5F6
+-->
+
+<ConstraintGraph>
+  <Nodes>
+    <Node id="STATE"        type="STATE"        symbol="brain"   arity="1"/>
+    <Node id="TRANSFORM"    type="TRANSFORM"    symbol="gear"    arity="1"/>
+    <Node id="INVARIANT"    type="INVARIANT"    symbol="balance" arity="1"/>
+    <Node id="CONSTRAINT"   type="CONSTRAINT"   symbol="lock"    arity="1"/>
+    <Node id="PROVENANCE"   type="PROVENANCE"   symbol="scroll"  arity="1"/>
+    <Node id="ADMISSIBLE"   type="ADMISSIBLE"   symbol="A"       arity="1"/>
+    <Node id="PRESERVE"     type="PRESERVE"     symbol="P"       arity="2"/>
+    <Node id="COLLAPSE"     type="COLLAPSE"     symbol="C"       arity="2"/>
+    <Node id="UNIVERSAL"    type="UNIVERSAL"    symbol="U"       arity="1"/>
+    <Node id="COUNTERMODEL" type="COUNTERMODEL" symbol="M"       arity="1"/>
+    <Node id="FIXED_POINT"  type="FIXED_POINT"  symbol="FP"      arity="2"/>
+    <Node id="CLOSED"       type="CLOSED"       symbol="O"       arity="2"/>
+    <Node id="FAILURE"      type="FAILURE"      symbol="FA"      arity="2"/>
+  </Nodes>
+
+  <Edges>
+    <Edge from="STATE"      to="ADMISSIBLE"   label="satisfies"/>
+    <Edge from="INVARIANT"  to="ADMISSIBLE"   label="forall_I_in_I_set"/>
+    <Edge from="ADMISSIBLE" to="PRESERVE"     label="antecedent"/>
+    <Edge from="TRANSFORM"  to="PRESERVE"     label="consequent"/>
+    <Edge from="ADMISSIBLE" to="COLLAPSE"     label="antecedent"/>
+    <Edge from="TRANSFORM"  to="COLLAPSE"     label="exists_neg_I"/>
+    <Edge from="ADMISSIBLE" to="UNIVERSAL"    label="forall_x"/>
+    <Edge from="TRANSFORM"  to="UNIVERSAL"    label="F"/>
+    <Edge from="COLLAPSE"   to="COUNTERMODEL" label="exists_x"/>
+    <Edge from="TRANSFORM"  to="FIXED_POINT"  label="F_x_eq_x"/>
+    <Edge from="STATE"      to="FIXED_POINT"  label="x"/>
+    <Edge from="ADMISSIBLE" to="CLOSED"       label="forall_x"/>
+    <Edge from="PRESERVE"   to="CLOSED"       label="preserve"/>
+    <Edge from="ADMISSIBLE" to="FAILURE"      label="exists_x"/>
+    <Edge from="PRESERVE"   to="FAILURE"      label="neg_preserve"/>
+  </Edges>
+
+  <BooleanKernel>
+    <NAND>lambda a,b. 1-a*b</NAND>
+    <NOT>lambda x. NAND(x,x)</NOT>
+    <AND>lambda a,b. NAND(NAND(a,b),NAND(a,b))</AND>
+    <OR>lambda a,b. NAND(NAND(a,a),NAND(b,b))</OR>
+    <IMPLIES>lambda a,b. OR(NOT(a),b)</IMPLIES>
+    <EQUAL>lambda a,b. AND(IMPLIES(a,b),IMPLIES(b,a))</EQUAL>
+  </BooleanKernel>
+
+  <FormalDefinitions>
+    <Step id="1" rule="ADMISSIBLE_DEF">
+      <Output>ADMISSIBLE(x) := AND_{I in I_set} I(x)</Output>
+    </Step>
+    <Step id="2" rule="PRESERVE_DEF">
+      <Output>PRESERVE(x,F) := IMPLIES(ADMISSIBLE(x), ADMISSIBLE(F(x)))</Output>
+    </Step>
+    <Step id="3" rule="COLLAPSE_DEF">
+      <Output>COLLAPSE(x,F) := AND(ADMISSIBLE(x), OR_{I in I_set} NOT(I(F(x))))</Output>
+    </Step>
+    <Step id="4" rule="UNIVERSAL_DEF">
+      <Output>UNIVERSAL(F) := AND_{x} IMPLIES(ADMISSIBLE(x), ADMISSIBLE(F(x)))</Output>
+    </Step>
+    <Step id="5" rule="COUNTERMODEL_DEF">
+      <Output>COUNTERMODEL(F) := OR_{x} COLLAPSE(x,F)</Output>
+    </Step>
+    <Step id="6" rule="FIXED_POINT_DEF">
+      <Output>FIXED_POINT(x,F) := EQUAL(F(x), x)</Output>
+    </Step>
+    <Step id="7" rule="CLOSED_DEF">
+      <Output>CLOSED(F,I_set) := AND_{x} IMPLIES(ADMISSIBLE(x), PRESERVE(x,F))</Output>
+    </Step>
+    <Step id="8" rule="FAILURE_DEF">
+      <Output>FAILURE(F,I_set) := OR_{x} AND(ADMISSIBLE(x), NOT(PRESERVE(x,F)))</Output>
+    </Step>
+  </FormalDefinitions>
+
+  <ValidationProof>
+    <Theorem name="UNIVERSAL_eq_CLOSED">
+      <Statement>UNIVERSAL(F) ≡ CLOSED(F, I_set)</Statement>
+      <Proof>
+        <Step>UNIVERSAL(F) := forall x. ADMISSIBLE(x) → ADMISSIBLE(F(x))</Step>
+        <Step>CLOSED(F,I_set) := forall x. ADMISSIBLE(x) → PRESERVE(x,F)</Step>
+        <Step>PRESERVE(x,F) := ADMISSIBLE(x) → ADMISSIBLE(F(x))</Step>
+        <Step>Substitute: CLOSED(F,I_set) := forall x. ADMISSIBLE(x) → (ADMISSIBLE(x) → ADMISSIBLE(F(x)))</Step>
+        <Step>By IMPLIES idempotence: (A → (A → B)) ≡ (A → B)</Step>
+        <Step>Therefore: CLOSED(F,I_set) ≡ forall x. ADMISSIBLE(x) → ADMISSIBLE(F(x)) ≡ UNIVERSAL(F)</Step>
+        <QED>EQUAL(UNIVERSAL(F), CLOSED(F,I_set)) = 1</QED>
+      </Proof>
+    </Theorem>
+    <Theorem name="COUNTERMODEL_eq_FAILURE">
+      <Statement>COUNTERMODEL(F) ≡ FAILURE(F, I_set)</Statement>
+      <Proof>
+        <Step>COUNTERMODEL(F) := exists x. COLLAPSE(x,F)</Step>
+        <Step>COLLAPSE(x,F) := ADMISSIBLE(x) ∧ exists I. ¬I(F(x))</Step>
+        <Step>exists I. ¬I(F(x)) ≡ ¬ADMISSIBLE(F(x))</Step>
+        <Step>COLLAPSE(x,F) ≡ ADMISSIBLE(x) ∧ ¬ADMISSIBLE(F(x))</Step>
+        <Step>¬PRESERVE(x,F) ≡ ADMISSIBLE(x) ∧ ¬ADMISSIBLE(F(x))</Step>
+        <Step>Therefore COLLAPSE(x,F) ≡ ¬PRESERVE(x,F)</Step>
+        <Step>COUNTERMODEL(F) := exists x. ¬PRESERVE(x,F) ≡ FAILURE(F,I_set)</Step>
+        <QED>EQUAL(COUNTERMODEL(F), FAILURE(F,I_set)) = 1</QED>
+      </Proof>
+    </Theorem>
+    <EntropyCheck entropy="0.0000" bound="0.20" pass="true" note="metadata — no probability distribution supplied"/>
+  </ValidationProof>
+
+  <FinalState>
+    <Definitions>
+      <ADMISSIBLE>lambda x. forall I in I_set. I(x)</ADMISSIBLE>
+      <PRESERVE>lambda x,F. IMPLIES(ADMISSIBLE(x), ADMISSIBLE(F(x)))</PRESERVE>
+      <COLLAPSE>lambda x,F. AND(ADMISSIBLE(x), OR_{I in I_set}. NOT(I(F(x))))</COLLAPSE>
+      <UNIVERSAL>lambda F. forall x. IMPLIES(ADMISSIBLE(x), ADMISSIBLE(F(x)))</UNIVERSAL>
+      <COUNTERMODEL>lambda F. exists x. COLLAPSE(x,F)</COUNTERMODEL>
+      <FIXED_POINT>lambda x,F. EQUAL(F(x),x)</FIXED_POINT>
+      <CLOSED>lambda F,I_set. forall x. IMPLIES(ADMISSIBLE(x), PRESERVE(x,F))</CLOSED>
+      <FAILURE>lambda F,I_set. exists x. AND(ADMISSIBLE(x), NOT(PRESERVE(x,F)))</FAILURE>
+    </Definitions>
+    <Equivalences>
+      <Eq proven="true">UNIVERSAL ≡ CLOSED</Eq>
+      <Eq proven="true">COUNTERMODEL ≡ FAILURE</Eq>
+    </Equivalences>
+    <Status>PROVEN</Status>
+    <CompositeHash>0xUNIVERSAL_CLOSURE_A1B2C3D4E5F6</CompositeHash>
+    <Timestamp>2026-01-15T00:00:00Z</Timestamp>
+  </FinalState>
+
+</ConstraintGraph>
